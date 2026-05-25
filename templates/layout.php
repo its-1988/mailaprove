@@ -7,7 +7,7 @@
  * - $pageContent (string)
  */
 
-$pageTitle = $pageTitle ?? 'Aprovação por e-mail';
+$pageTitle = $pageTitle ?? __('Aprovação por e-mail', 'mailaprove');
 if (!headers_sent()) {
     header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
     header('Pragma: no-cache');
@@ -428,14 +428,14 @@ if (!headers_sent()) {
                 <div class="abm-logo" aria-hidden="true">&#9993;</div>
                 <div class="abm-brand">
                     <p class="abm-brand__eyebrow">GLPI</p>
-                    <h1 class="abm-brand__title">Aprovação por e-mail</h1>
+                    <h1 class="abm-brand__title"><?= htmlspecialchars(__('Aprovação por e-mail', 'mailaprove'), ENT_QUOTES, 'UTF-8') ?></h1>
                 </div>
             </header>
             <div class="abm-body">
                 <?= $pageContent ?? '' ?>
             </div>
             <footer class="abm-footer">
-                <p>Processado com segurança pelo GLPI</p>
+                <p><?= htmlspecialchars(__('Processado com segurança pelo GLPI', 'mailaprove'), ENT_QUOTES, 'UTF-8') ?></p>
             </footer>
         </section>
     </main>

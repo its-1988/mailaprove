@@ -1,6 +1,8 @@
 <?php
 
-include('../../../inc/includes.php');
+if (!defined('GLPI_ROOT')) {
+    include('../../../inc/includes.php');
+}
 
 use GlpiPlugin\Mailaprove\Token;
 use GlpiPlugin\Mailaprove\PublicAction;
@@ -11,7 +13,7 @@ $rawToken = $_GET['token'] ?? $_POST['token'] ?? '';
 if (empty($rawToken)) {
     $errorTitle = __('Token ausente', 'mailaprove');
     $errorMessage = __('Nenhum token foi informado. Use o link original recebido por e-mail.', 'mailaprove');
-    include(GLPI_ROOT . '/plugins/mailaprove/templates/error.php');
+    include(__DIR__ . '/../templates/error.php');
     exit;
 }
 
@@ -45,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ticketSummary = $context['ticket'];
         $formTitle = __('Recusar solução', 'mailaprove');
         $formAction = 'solution_reject';
-        include(GLPI_ROOT . '/plugins/mailaprove/templates/reject_form.php');
+        include(__DIR__ . '/../templates/reject_form.php');
         exit;
     }
 
@@ -62,22 +64,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $solution = $context['item'];
-    $followup = new ITILFollowup();
-    $followup->add([
-        'items_id'   => $tokenData['tickets_id'],
-        'itemtype'   => 'Ticket',
-        'content'    => sprintf(
-            __('Solução recusada por e-mail. Motivo: %s', 'mailaprove'),
-            $comment
-        ),
-        'requesttypes_id' => 0,
-    ]);
-
-    $updateResult = $solution->update([
-        'id'     => (int)$tokenData['items_id'],
-        'status' => CommonITILValidation::REFUSED,
-    ]);
+    // Bypass session-based permission checks (token is the auth) and apply
+    // the solution rejection through $DB directly.
+    $updateResult = PublicAction::applySolutionDecision(
+        (int) $tokenData['items_id'],
+        CommonITILValidation::REFUSED,
+        (int) $tokenData['users_id'],
+        sprintf(__('Solução recusada por e-mail. Motivo: %s', 'mailaprove'), $comment)
+    );
 
     if ($updateResult) {
         Token::markRelatedAsUsed([
@@ -92,12 +86,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             (int)$tokenData['tickets_id']
         );
         $confirmType = 'warning';
-        include(GLPI_ROOT . '/plugins/mailaprove/templates/confirm.php');
+        include(__DIR__ . '/../templates/confirm.php');
     } else {
         AuditLog::record('solution_reject_failed', 'error', AuditLog::contextFromTokenRow($tokenData));
         $errorTitle = __('Erro ao processar', 'mailaprove');
         $errorMessage = __('Não foi possível recusar a solução. Acesse o GLPI para verificar o chamado.', 'mailaprove');
-        include(GLPI_ROOT . '/plugins/mailaprove/templates/error.php');
+        include(__DIR__ . '/../templates/error.php');
     }
     exit;
 }
@@ -108,4 +102,4 @@ $formError = '';
 $ticketSummary = $context['ticket'];
 $formTitle = __('Recusar solução', 'mailaprove');
 $formAction = 'solution_reject';
-include(GLPI_ROOT . '/plugins/mailaprove/templates/reject_form.php');
+include(__DIR__ . '/../templates/reject_form.php');

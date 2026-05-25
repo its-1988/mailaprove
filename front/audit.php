@@ -1,6 +1,8 @@
 <?php
 
-include('../../../inc/includes.php');
+if (!defined('GLPI_ROOT')) {
+    include('../../../inc/includes.php');
+}
 
 use GlpiPlugin\Mailaprove\AuditLog;
 
@@ -8,7 +10,10 @@ Session::checkRight('config', READ);
 
 AuditLog::ensureTable();
 
-global $DB;
+global $DB, $CFG_GLPI;
+
+$pluginRoot = ($CFG_GLPI['root_doc'] ?? '') . '/plugins/mailaprove';
+$auditUrl = $pluginRoot . '/front/audit.php';
 
 $status = trim((string) ($_GET['status'] ?? ''));
 $event = trim((string) ($_GET['event'] ?? ''));
@@ -91,7 +96,7 @@ foreach ($DB->request([
 
 Html::header(
     __('Auditoria da aprovação por e-mail', 'mailaprove'),
-    $_SERVER['PHP_SELF'],
+    $auditUrl,
     'config',
     'GlpiPlugin\\Mailaprove\\Config'
 );
@@ -229,6 +234,30 @@ function mailaprove_audit_status_class(string $status): string
     .mailaprove-audit-badge--error { color: #b91c1c; background: rgba(185, 28, 28, 0.1); }
     .mailaprove-audit-badge--info { color: #2563eb; background: rgba(37, 99, 235, 0.1); }
 
+    .mailaprove-audit-payload {
+        margin-top: 0.45rem;
+    }
+
+    .mailaprove-audit-payload > summary {
+        cursor: pointer;
+        color: var(--mailaprove-primary);
+        font-size: 0.78rem;
+        font-weight: 700;
+        user-select: none;
+    }
+
+    .mailaprove-audit-payload > pre {
+        margin: 0.4rem 0 0;
+        padding: 0.6rem 0.7rem;
+        max-height: 280px;
+        overflow: auto;
+        border-radius: 8px;
+        background: #0f172a;
+        color: #dbeafe;
+        font-size: 0.75rem;
+        white-space: pre-wrap;
+    }
+
     .mailaprove-audit-muted {
         color: var(--mailaprove-muted);
         font-size: 0.8rem;
@@ -332,7 +361,17 @@ function mailaprove_audit_status_class(string $status): string
                 </thead>
                 <tbody>
                     <?php foreach ($rows as $row): ?>
-                        <?php $rowStatus = (string) ($row['status'] ?? 'info'); ?>
+                        <?php
+                            $rowStatus  = (string) ($row['status'] ?? 'info');
+                            $payloadRaw = (string) ($row['payload'] ?? '');
+                            $payloadFmt = '';
+                            if ($payloadRaw !== '') {
+                                $decoded = json_decode($payloadRaw, true);
+                                $payloadFmt = json_last_error() === JSON_ERROR_NONE
+                                    ? json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+                                    : $payloadRaw;
+                            }
+                        ?>
                         <tr>
                             <td>
                                 <span class="mailaprove-audit-badge mailaprove-audit-badge--<?= mailaprove_audit_status_class($rowStatus) ?>">
@@ -344,6 +383,12 @@ function mailaprove_audit_status_class(string $status): string
                                 <div class="mailaprove-audit-muted"><?= htmlspecialchars((string) ($row['action_type'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
                                 <?php if (!empty($row['message'])): ?>
                                     <div class="mailaprove-audit-muted"><?= htmlspecialchars((string) $row['message'], ENT_QUOTES, 'UTF-8') ?></div>
+                                <?php endif; ?>
+                                <?php if ($payloadFmt !== ''): ?>
+                                    <details class="mailaprove-audit-payload">
+                                        <summary><?= __('payload', 'mailaprove') ?></summary>
+                                        <pre><?= htmlspecialchars($payloadFmt, ENT_QUOTES, 'UTF-8') ?></pre>
+                                    </details>
                                 <?php endif; ?>
                             </td>
                             <td>#<?= (int) ($row['tickets_id'] ?? 0) ?><div class="mailaprove-audit-muted"><?= __('item', 'mailaprove') ?> <?= (int) ($row['items_id'] ?? 0) ?></div></td>

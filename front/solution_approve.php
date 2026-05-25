@@ -1,6 +1,8 @@
 <?php
 
-include('../../../inc/includes.php');
+if (!defined('GLPI_ROOT')) {
+    include('../../../inc/includes.php');
+}
 
 use GlpiPlugin\Mailaprove\Token;
 use GlpiPlugin\Mailaprove\PublicAction;
@@ -11,7 +13,7 @@ $rawToken = $_POST['token'] ?? $_GET['token'] ?? '';
 if (empty($rawToken)) {
     $errorTitle = __('Token ausente', 'mailaprove');
     $errorMessage = __('Nenhum token foi informado. Use o link original recebido por e-mail.', 'mailaprove');
-    include(GLPI_ROOT . '/plugins/mailaprove/templates/error.php');
+    include(__DIR__ . '/../templates/error.php');
     exit;
 }
 
@@ -46,23 +48,18 @@ if (!$isPost) {
     $confirmNote = __('Após confirmar, a solução será marcada como aceita no GLPI e os links relacionados serão invalidados.', 'mailaprove');
     $actionUrl = 'solution_approve.php';
     $ticketSummary = $context['ticket'];
-    include(GLPI_ROOT . '/plugins/mailaprove/templates/action_confirm.php');
+    include(__DIR__ . '/../templates/action_confirm.php');
     exit;
 }
 
-$solution = $context['item'];
-$followup = new ITILFollowup();
-$followup->add([
-    'items_id'   => $tokenData['tickets_id'],
-    'itemtype'   => 'Ticket',
-    'content'    => __('Solução aceita por e-mail', 'mailaprove'),
-    'requesttypes_id' => 0,
-]);
-
-$updateResult = $solution->update([
-    'id'     => (int)$tokenData['items_id'],
-    'status' => CommonITILValidation::ACCEPTED,
-]);
+// Bypass session-based permission checks (token is the auth) and apply the
+// solution acceptance through $DB directly — same reason as approve.php.
+$updateResult = PublicAction::applySolutionDecision(
+    (int) $tokenData['items_id'],
+    CommonITILValidation::ACCEPTED,
+    (int) $tokenData['users_id'],
+    __('Solução aceita por e-mail', 'mailaprove')
+);
 
 if ($updateResult) {
     Token::markRelatedAsUsed([
@@ -77,10 +74,10 @@ if ($updateResult) {
         (int)$tokenData['tickets_id']
     );
     $confirmType = 'success';
-    include(GLPI_ROOT . '/plugins/mailaprove/templates/confirm.php');
+    include(__DIR__ . '/../templates/confirm.php');
 } else {
     AuditLog::record('solution_approve_failed', 'error', AuditLog::contextFromTokenRow($tokenData));
     $errorTitle = __('Erro ao processar', 'mailaprove');
     $errorMessage = __('Não foi possível aceitar a solução. Acesse o GLPI para verificar o chamado.', 'mailaprove');
-    include(GLPI_ROOT . '/plugins/mailaprove/templates/error.php');
+    include(__DIR__ . '/../templates/error.php');
 }

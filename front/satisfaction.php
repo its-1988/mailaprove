@@ -1,6 +1,8 @@
 <?php
 
-include('../../../inc/includes.php');
+if (!defined('GLPI_ROOT')) {
+    include('../../../inc/includes.php');
+}
 
 use GlpiPlugin\Mailaprove\Token;
 use GlpiPlugin\Mailaprove\PublicAction;
@@ -11,7 +13,7 @@ $rawToken = $_GET['token'] ?? $_POST['token'] ?? '';
 if (empty($rawToken)) {
     $errorTitle = __('Token ausente', 'mailaprove');
     $errorMessage = __('Nenhum token foi informado. Use o link original recebido por e-mail.', 'mailaprove');
-    include(GLPI_ROOT . '/plugins/mailaprove/templates/error.php');
+    include(__DIR__ . '/../templates/error.php');
     exit;
 }
 
@@ -44,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $formError = __('Selecione uma nota entre 1 e 5 estrelas.', 'mailaprove');
         $ticketId = (int)$tokenData['tickets_id'];
         $ticketSummary = $context['ticket'];
-        include(GLPI_ROOT . '/plugins/mailaprove/templates/satisfaction_form.php');
+        include(__DIR__ . '/../templates/satisfaction_form.php');
         exit;
     }
 
@@ -61,13 +63,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $satisfaction = $context['item'];
-    $updateResult = $satisfaction->update([
-        'id'            => (int)$tokenData['items_id'],
-        'satisfaction'   => $rating,
-        'comment'        => $comment,
-        'date_answered'  => date('Y-m-d H:i:s'),
-    ]);
+    // Bypass session-based permission checks (token is the auth) and store
+    // the satisfaction answer through $DB directly.
+    $updateResult = PublicAction::applySatisfactionResponse(
+        (int) $tokenData['items_id'],
+        $rating,
+        $comment
+    );
 
     if ($updateResult) {
         Token::markRelatedAsUsed([
@@ -83,12 +85,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             (int)$tokenData['tickets_id']
         );
         $confirmType = 'success';
-        include(GLPI_ROOT . '/plugins/mailaprove/templates/confirm.php');
+        include(__DIR__ . '/../templates/confirm.php');
     } else {
         AuditLog::record('satisfaction_submit_failed', 'error', AuditLog::contextFromTokenRow($tokenData));
         $errorTitle = __('Erro ao processar', 'mailaprove');
         $errorMessage = __('Não foi possível enviar a pesquisa. Acesse o GLPI para verificar o chamado.', 'mailaprove');
-        include(GLPI_ROOT . '/plugins/mailaprove/templates/error.php');
+        include(__DIR__ . '/../templates/error.php');
     }
     exit;
 }
@@ -97,4 +99,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $ticketId = (int)$tokenData['tickets_id'];
 $formError = '';
 $ticketSummary = $context['ticket'];
-include(GLPI_ROOT . '/plugins/mailaprove/templates/satisfaction_form.php');
+include(__DIR__ . '/../templates/satisfaction_form.php');

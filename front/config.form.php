@@ -1,21 +1,23 @@
 <?php
 
-include('../../../inc/includes.php');
+if (!defined('GLPI_ROOT')) {
+    include('../../../inc/includes.php');
+}
 
 use GlpiPlugin\Mailaprove\Config;
 use GlpiPlugin\Mailaprove\AuditLog;
 
 Session::checkRight('config', UPDATE);
 
-Html::header(
-    __('Aprovação por e-mail', 'mailaprove'),
-    $_SERVER['PHP_SELF'],
-    'config',
-    'GlpiPlugin\\Mailaprove\\Config'
-);
+global $CFG_GLPI;
+$pluginRoot = ($CFG_GLPI['root_doc'] ?? '') . '/plugins/mailaprove';
+$configFormUrl = $pluginRoot . '/front/config.form.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    Session::checkCSRF($_POST);
+    // GLPI 11 validates `_glpi_csrf_token` automatically before this script
+    // runs and consumes the token in the process. Calling Session::checkCSRF
+    // again here would always fail because the token has been removed from
+    // $_SESSION['glpicsrftokens']. The hidden input in the form is enough.
 
     Config::updateConfig([
         'token_expiration_hours'    => max(1, min(8760, (int) ($_POST['token_expiration_hours'] ?? 72))),
@@ -35,12 +37,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         INFO
     );
 
-    Html::redirect($_SERVER['PHP_SELF']);
+    Html::redirect($configFormUrl);
+    exit;
 }
 
+Html::header(
+    __('Aprovação por e-mail', 'mailaprove'),
+    $configFormUrl,
+    'config',
+    'GlpiPlugin\\Mailaprove\\Config'
+);
+
 $config = Config::getConfig();
-global $CFG_GLPI;
-$templatePreviewUrl = ($CFG_GLPI['root_doc'] ?? '') . '/plugins/mailaprove/ajax/template.preview.php';
+$templatePreviewUrl = $pluginRoot . '/ajax/template.preview.php';
 
 $enabledCount = 0;
 $enabledCount += !empty($config['enable_validation']) ? 1 : 0;
@@ -85,79 +94,92 @@ $tags = [
     ['tag' => '##ticket.satisfaction.url##', 'description' => __('URL da pesquisa de satisfação', 'mailaprove')],
 ];
 
+// Helper closures keep the HTML-snippet strings short and let gettext
+// pick up the human-readable parts (button labels, intro lines) so the
+// snippet shown to the admin matches the active GLPI language.
+$wrapBlock = function (string $intro, string $buttons): string {
+    return '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%; margin:18px 0;">' . "\n"
+        . '  <tr>' . "\n"
+        . '    <td style="padding:16px; border:1px solid #d9e1ec; border-radius:8px; background:#f8fafc;">' . "\n"
+        . '      <p style="margin:0 0 12px; color:#344054; font-size:14px;">' . $intro . '</p>' . "\n"
+        . $buttons
+        . '    </td>' . "\n"
+        . '  </tr>' . "\n"
+        . '</table>';
+};
+$snippetButton = function (string $url, string $label, string $color, bool $withMargin = false): string {
+    $margin = $withMargin ? 'margin-right:8px; ' : '';
+    return '      <a href="' . $url . '" style="display:inline-block; padding:10px 16px; ' . $margin
+        . 'border-radius:6px; background:' . $color . '; color:#ffffff; text-decoration:none; font-weight:700;">'
+        . $label . '</a>' . "\n";
+};
+
 $templateSnippets = [
     [
         'title'       => __('Bloco de e-mail para validação', 'mailaprove'),
         'description' => __('Use no modelo de notificação de validação do chamado.', 'mailaprove'),
         'icon'        => 'fa-check-double',
-        'html'        => '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%; margin:18px 0;">
-  <tr>
-    <td style="padding:16px; border:1px solid #d9e1ec; border-radius:8px; background:#f8fafc;">
-      <p style="margin:0 0 12px; color:#344054; font-size:14px;">Revise a validação solicitada para este chamado.</p>
-      <a href="##ticket.validation.accepturl##" style="display:inline-block; padding:10px 16px; margin-right:8px; border-radius:6px; background:#0f766e; color:#ffffff; text-decoration:none; font-weight:700;">Aprovar</a>
-      <a href="##ticket.validation.rejecturl##" style="display:inline-block; padding:10px 16px; border-radius:6px; background:#b91c1c; color:#ffffff; text-decoration:none; font-weight:700;">Rejeitar</a>
-    </td>
-  </tr>
-</table>',
+        'html'        => $wrapBlock(
+            __('Revise a validação solicitada para este chamado.', 'mailaprove'),
+            $snippetButton('##ticket.validation.accepturl##', __('Aprovar', 'mailaprove'), '#0f766e', true)
+            . $snippetButton('##ticket.validation.rejecturl##', __('Recusar', 'mailaprove'), '#b91c1c')
+        ),
     ],
     [
         'title'       => __('Bloco de e-mail para solução', 'mailaprove'),
         'description' => __('Use no modelo de notificação de solução do chamado.', 'mailaprove'),
         'icon'        => 'fa-clipboard-check',
-        'html'        => '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%; margin:18px 0;">
-  <tr>
-    <td style="padding:16px; border:1px solid #d9e1ec; border-radius:8px; background:#f8fafc;">
-      <p style="margin:0 0 12px; color:#344054; font-size:14px;">A solução foi registrada. Confirme se o atendimento resolveu sua solicitação.</p>
-      <a href="##ticket.solution.accepturl##" style="display:inline-block; padding:10px 16px; margin-right:8px; border-radius:6px; background:#2563eb; color:#ffffff; text-decoration:none; font-weight:700;">Aceitar solução</a>
-      <a href="##ticket.solution.rejecturl##" style="display:inline-block; padding:10px 16px; border-radius:6px; background:#b45309; color:#ffffff; text-decoration:none; font-weight:700;">Rejeitar solução</a>
-    </td>
-  </tr>
-</table>',
+        'html'        => $wrapBlock(
+            __('Uma solução foi registrada. Confirme se ela resolveu sua solicitação.', 'mailaprove'),
+            $snippetButton('##ticket.solution.accepturl##', __('Aceitar solução', 'mailaprove'), '#2563eb', true)
+            . $snippetButton('##ticket.solution.rejecturl##', __('Recusar solução', 'mailaprove'), '#b45309')
+        ),
     ],
     [
         'title'       => __('Bloco de e-mail para satisfação', 'mailaprove'),
         'description' => __('Use no modelo de notificação da pesquisa de satisfação.', 'mailaprove'),
         'icon'        => 'fa-star',
-        'html'        => '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%; margin:18px 0;">
-  <tr>
-    <td style="padding:16px; border:1px solid #d9e1ec; border-radius:8px; background:#f8fafc;">
-      <p style="margin:0 0 12px; color:#344054; font-size:14px;">Sua opinião ajuda a melhorar o atendimento.</p>
-      <a href="##ticket.satisfaction.url##" style="display:inline-block; padding:10px 16px; border-radius:6px; background:#2563eb; color:#ffffff; text-decoration:none; font-weight:700;">Responder pesquisa</a>
-    </td>
-  </tr>
-</table>',
+        'html'        => $wrapBlock(
+            __('Sua opinião ajuda a melhorar a experiência de atendimento.', 'mailaprove'),
+            $snippetButton('##ticket.satisfaction.url##', __('Responder pesquisa', 'mailaprove'), '#2563eb')
+        ),
     ],
 ];
+
+$exampleButton = function (string $url, string $label, string $color): string {
+    return '<a href="' . $url . '" style="display:inline-block;padding:10px 16px;background:'
+        . $color . ';color:#fff;text-decoration:none;border-radius:6px;">' . $label . '</a>';
+};
 
 $customTemplateFields = [
     [
         'name'        => 'template_validation',
         'title'       => __('Modelo customizado da validação', 'mailaprove'),
         'description' => __('Variáveis disponíveis: {{approve_url}}, {{reject_url}}, {{ticket_id}}, {{ticket_name}}.', 'mailaprove'),
-        'example'     => '<p>Chamado #{{ticket_id}}: {{ticket_name}}</p>
-<p>
-  <a href="{{approve_url}}" style="display:inline-block;padding:10px 16px;background:#0f766e;color:#fff;text-decoration:none;border-radius:6px;">Aprovar</a>
-  <a href="{{reject_url}}" style="display:inline-block;padding:10px 16px;background:#b91c1c;color:#fff;text-decoration:none;border-radius:6px;">Rejeitar</a>
-</p>',
+        'example'     => '<p>' . sprintf(__('Chamado #%s: %s', 'mailaprove'), '{{ticket_id}}', '{{ticket_name}}') . '</p>' . "\n"
+            . '<p>' . "\n"
+            . '  ' . $exampleButton('{{approve_url}}', __('Aprovar', 'mailaprove'), '#0f766e') . "\n"
+            . '  ' . $exampleButton('{{reject_url}}', __('Recusar', 'mailaprove'), '#b91c1c') . "\n"
+            . '</p>',
     ],
     [
         'name'        => 'template_solution',
         'title'       => __('Modelo customizado da solução', 'mailaprove'),
         'description' => __('Variáveis disponíveis: {{accept_url}}, {{reject_url}}, {{ticket_id}}, {{ticket_name}}.', 'mailaprove'),
-        'example'     => '<p>A solução do chamado #{{ticket_id}} foi registrada.</p>
-<p>
-  <a href="{{accept_url}}" style="display:inline-block;padding:10px 16px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;">Aceitar solução</a>
-  <a href="{{reject_url}}" style="display:inline-block;padding:10px 16px;background:#b45309;color:#fff;text-decoration:none;border-radius:6px;">Rejeitar solução</a>
-</p>',
+        'example'     => '<p>' . sprintf(__('A solução do chamado #%s foi registrada.', 'mailaprove'), '{{ticket_id}}') . '</p>' . "\n"
+            . '<p>' . "\n"
+            . '  ' . $exampleButton('{{accept_url}}', __('Aceitar solução', 'mailaprove'), '#2563eb') . "\n"
+            . '  ' . $exampleButton('{{reject_url}}', __('Recusar solução', 'mailaprove'), '#b45309') . "\n"
+            . '</p>',
     ],
     [
         'name'        => 'template_satisfaction',
         'title'       => __('Modelo customizado da satisfação', 'mailaprove'),
         'description' => __('Variáveis disponíveis: {{survey_url}}, {{ticket_id}}, {{ticket_name}}.', 'mailaprove'),
-        'example'     => '<p>Sua opinião sobre o chamado #{{ticket_id}} é importante.</p>
-<p>
-  <a href="{{survey_url}}" style="display:inline-block;padding:10px 16px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;">Responder pesquisa</a>
-</p>',
+        'example'     => '<p>' . sprintf(__('Sua opinião sobre o chamado #%s é importante.', 'mailaprove'), '{{ticket_id}}') . '</p>' . "\n"
+            . '<p>' . "\n"
+            . '  ' . $exampleButton('{{survey_url}}', __('Responder pesquisa', 'mailaprove'), '#2563eb') . "\n"
+            . '</p>',
     ],
 ];
 
@@ -785,7 +807,7 @@ foreach ($DB->request([
 </style>
 
 <div class="container-fluid mailaprove-page">
-    <form method="post" action="<?= htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES, 'UTF-8') ?>">
+    <form method="post" action="<?= htmlspecialchars($configFormUrl, ENT_QUOTES, 'UTF-8') ?>">
         <input type="hidden" name="_glpi_csrf_token" value="<?= htmlspecialchars(Session::getNewCSRFToken(), ENT_QUOTES, 'UTF-8') ?>">
 
         <section class="mailaprove-hero">
@@ -1173,13 +1195,16 @@ function previewTemplate(button) {
     const formData = new FormData();
     formData.append('type', target.name || target.id || '');
     formData.append('template', target.value || '');
+    if (csrf && csrf.value) {
+        // GLPI 11 middleware validates _glpi_csrf_token from the request body.
+        formData.append('_glpi_csrf_token', csrf.value);
+    }
 
     fetch(preview.getAttribute('data-preview-url'), {
         method: 'POST',
         headers: {
             'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-Glpi-Csrf-Token': csrf ? csrf.value : ''
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: formData,
         credentials: 'same-origin'

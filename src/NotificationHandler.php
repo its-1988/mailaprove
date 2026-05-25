@@ -21,6 +21,23 @@ class NotificationHandler
     {
         $config = Config::getConfig();
 
+        // Diagnostic trace so admins can verify the hook fires and on which event.
+        AuditLog::record('hook_invoked', 'info', [
+            'tickets_id' => (int) ($target->obj->fields['id'] ?? 0),
+            'message'    => 'ITEM_GET_DATA invoked for NotificationTargetTicket',
+            'payload'    => [
+                'event'           => (string) ($target->raiseevent ?? ''),
+                'recipient_data'  => isset($target->recipient_data) ? $target->recipient_data : null,
+                'has_user_id'     => isset($target->data['##user.id##']) ? (int) $target->data['##user.id##'] : null,
+                'validation_id'   => isset($target->options['validation_id']) ? (int) $target->options['validation_id'] : null,
+                'has_obj'         => $target->obj !== null,
+                'options_keys'    => is_array($target->options ?? null) ? array_keys($target->options) : [],
+                'config_validation'   => (int) ($config['enable_validation'] ?? 0),
+                'config_solution'     => (int) ($config['enable_solution'] ?? 0),
+                'config_satisfaction' => (int) ($config['enable_satisfaction'] ?? 0),
+            ],
+        ]);
+
         // Register all custom tags (so they appear in the template editor)
         self::registerTags($target, $config);
 
@@ -109,26 +126,52 @@ class NotificationHandler
         // In GLPI notifications, we look at who the notification is being sent to
         $recipientUserId = self::getRecipientUserId($target);
 
-        // Handle validation events
-        if (!empty($config['enable_validation'])
-            && in_array($event, ['validation', 'validation_answer', 'new', 'update'], true)
-        ) {
+        // Standard NotificationTargetTicket events in GLPI 11:
+        //   new, update, solved, rejectsolution, validation, validation_answer,
+        //   validation_reminder, closed, delete, alertnotclosed, recall,
+        //   recall_ola, satisfaction, replysatisfaction
+        // We are permissive about which event triggers each injection so the
+        // plugin works regardless of which template (Solved / Update /
+        // Closed / etc.) the admin chose to embed the tags in.
+
+        $validationEvents = ['validation', 'validation_answer', 'validation_reminder', 'new', 'update'];
+        $solutionEvents   = ['solved', 'rejectsolution', 'update', 'new', 'closed'];
+        $satisfactionEvents = ['satisfaction', 'replysatisfaction'];
+
+        if (!empty($config['enable_validation']) && in_array($event, $validationEvents, true)) {
             self::populateValidationUrls($target, $ticketId, $recipientUserId);
         }
 
-        // Handle solution events
-        if (!empty($config['enable_solution'])
-            && in_array($event, ['solution', 'add_followup', 'update', 'new'], true)
-        ) {
+        if (!empty($config['enable_solution']) && in_array($event, $solutionEvents, true)) {
             self::populateSolutionUrls($target, $ticketId, $recipientUserId);
         }
 
-        // Handle satisfaction events
-        if (!empty($config['enable_satisfaction'])
-            && in_array($event, ['satisfaction', 'replysatisfaction'], true)
-        ) {
+        if (!empty($config['enable_satisfaction']) && in_array($event, $satisfactionEvents, true)) {
             self::populateSatisfactionUrls($target, $ticketId, $recipientUserId);
         }
+    }
+
+    /**
+     * Return true if the user is a member of the given GLPI group.
+     */
+    private static function isUserInGroup(int $userId, int $groupId): bool
+    {
+        global $DB;
+
+        if ($userId <= 0 || $groupId <= 0) {
+            return false;
+        }
+
+        $iterator = $DB->request([
+            'FROM'  => 'glpi_groups_users',
+            'WHERE' => [
+                'users_id'  => $userId,
+                'groups_id' => $groupId,
+            ],
+            'LIMIT' => 1,
+        ]);
+
+        return count($iterator) > 0;
     }
 
     /**
@@ -136,22 +179,34 @@ class NotificationHandler
      */
     private static function getRecipientUserId(NotificationTargetTicket $target): int
     {
-        // Try to get from current recipient data
-        if (!empty($target->data['##lang.validation.validator##'])
-            || !empty($target->data['##validation.validator##'])
+        // GLPI populates target->recipient_data during recipient resolution.
+        if (isset($target->recipient_data)
+            && is_array($target->recipient_data)
+            && (string) ($target->recipient_data['itemtype'] ?? '') === 'User'
+            && !empty($target->recipient_data['items_id'])
         ) {
-            // For validation events, the recipient is the validator
-            // Try to find the users_id_validate from the ticket validations
+            return (int) $target->recipient_data['items_id'];
         }
 
-        // Try options
-        if (isset($target->options['users_id'])) {
-            return (int)$target->options['users_id'];
+        // Standard per-recipient template data macros.
+        foreach (['##user.id##', '##validation.validator.id##', '##author.id##'] as $key) {
+            if (isset($target->data[$key]) && (int) $target->data[$key] > 0) {
+                return (int) $target->data[$key];
+            }
         }
 
-        // Try to get from the notification recipient
-        if (isset($target->data['##user.id##'])) {
-            return (int)$target->data['##user.id##'];
+        // Notification options bag, e.g. when invoked programmatically.
+        if (isset($target->options['users_id']) && (int) $target->options['users_id'] > 0) {
+            return (int) $target->options['users_id'];
+        }
+
+        // target->target stores the current recipient identifier in some versions.
+        if (
+            property_exists($target, 'target')
+            && is_array($target->target)
+            && (string) ($target->target['itemtype'] ?? '') === 'User'
+        ) {
+            return (int) ($target->target['items_id'] ?? 0);
         }
 
         return 0;
@@ -167,38 +222,145 @@ class NotificationHandler
     ): void {
         global $DB;
 
-        $where = [
-            'tickets_id' => $ticketId,
-            'status'     => CommonITILValidation::WAITING,
-        ];
-        if ($recipientUserId > 0) {
-            $where['users_id_validate'] = $recipientUserId;
+        // GLPI 11 raises validation notifications with options.validation_id
+        // pointing at the specific TicketValidation row being processed.
+        // This is the most reliable way to discover which validation we are
+        // sending the e-mail for (the recipient may be the validator, a
+        // substitute, or the requester depending on the template).
+        $optionValidationId = 0;
+        if (isset($target->options['validation_id']) && (int) $target->options['validation_id'] > 0) {
+            $optionValidationId = (int) $target->options['validation_id'];
         }
 
-        // Find a pending validation for the current recipient.
-        $iterator = $DB->request([
-            'FROM'  => 'glpi_ticketvalidations',
-            'WHERE' => $where,
-            'ORDER' => 'submission_date DESC',
-            'LIMIT' => 1,
+        $validation = null;
+
+        if ($optionValidationId > 0) {
+            $iterator = $DB->request([
+                'FROM'  => 'glpi_ticketvalidations',
+                'WHERE' => [
+                    'id'         => $optionValidationId,
+                    'tickets_id' => $ticketId,
+                ],
+                'LIMIT' => 1,
+            ]);
+            if (count($iterator) > 0) {
+                $validation = (array) $iterator->current();
+            }
+        }
+
+        if ($validation === null && $recipientUserId > 0) {
+            // Fallback: most recent pending validation for this validator.
+            $iterator = $DB->request([
+                'FROM'  => 'glpi_ticketvalidations',
+                'WHERE' => [
+                    'tickets_id'        => $ticketId,
+                    'status'            => CommonITILValidation::WAITING,
+                    'users_id_validate' => $recipientUserId,
+                ],
+                'ORDER' => 'submission_date DESC',
+                'LIMIT' => 1,
+            ]);
+            if (count($iterator) > 0) {
+                $validation = (array) $iterator->current();
+            }
+        }
+
+        if ($validation === null) {
+            AuditLog::record('validation_url_skip', 'warning', [
+                'tickets_id' => $ticketId,
+                'message'    => 'No matching validation row found',
+                'payload'    => [
+                    'option_validation_id' => $optionValidationId,
+                    'recipient_user_id'    => $recipientUserId,
+                ],
+            ]);
+            self::clearValidationTags($target);
+            return;
+        }
+
+        // Resolve the validator user ID.
+        //
+        // GLPI 11 stores the validation target in (itemtype_target,
+        // items_id_target) to support both User and Group targets. The legacy
+        // `users_id_validate` column is 0 for rows created on 11.x.
+        //
+        // - itemtype_target = 'User'  → items_id_target is the validator.
+        // - itemtype_target = 'Group' → any member of the group can approve.
+        //   We use the recipient's user ID after verifying group membership.
+        // - Fallback: legacy `users_id_validate` (rows migrated from 10.x).
+        $itemtypeTarget = (string) ($validation['itemtype_target'] ?? '');
+        $itemsIdTarget  = (int) ($validation['items_id_target'] ?? 0);
+        $legacyUserId   = (int) ($validation['users_id_validate'] ?? 0);
+
+        $validatorUserId = 0;
+        if ($itemtypeTarget === 'User' && $itemsIdTarget > 0) {
+            $validatorUserId = $itemsIdTarget;
+        } elseif ($itemtypeTarget === 'Group' && $itemsIdTarget > 0) {
+            if ($recipientUserId > 0 && self::isUserInGroup($recipientUserId, $itemsIdTarget)) {
+                $validatorUserId = $recipientUserId;
+            }
+        } elseif ($legacyUserId > 0) {
+            $validatorUserId = $legacyUserId;
+        }
+
+        if ($validatorUserId <= 0) {
+            AuditLog::record('validation_url_skip', 'warning', [
+                'tickets_id' => $ticketId,
+                'message'    => 'Could not resolve validator from target/recipient',
+                'payload'    => [
+                    'validation_id'    => (int) $validation['id'],
+                    'itemtype_target'  => $itemtypeTarget,
+                    'items_id_target'  => $itemsIdTarget,
+                    'legacy_user_id'   => $legacyUserId,
+                    'recipient_user_id'=> $recipientUserId,
+                ],
+            ]);
+            self::clearValidationTags($target);
+            return;
+        }
+
+        if (
+            $itemtypeTarget === 'User'
+            && $recipientUserId > 0
+            && $recipientUserId !== $validatorUserId
+        ) {
+            // Recipient is not the validator (e.g. CC, watcher) — do not leak tokens.
+            AuditLog::record('validation_url_skip', 'warning', [
+                'tickets_id' => $ticketId,
+                'message'    => 'Recipient is not the validator',
+                'payload'    => [
+                    'recipient_user_id' => $recipientUserId,
+                    'validator_user_id' => $validatorUserId,
+                ],
+            ]);
+            self::clearValidationTags($target);
+            return;
+        }
+
+        if ((int) ($validation['status'] ?? 0) !== CommonITILValidation::WAITING) {
+            AuditLog::record('validation_url_skip', 'warning', [
+                'tickets_id' => $ticketId,
+                'message'    => 'Validation is not in WAITING status',
+                'payload'    => [
+                    'validation_id' => (int) $validation['id'],
+                    'status'        => (int) ($validation['status'] ?? 0),
+                ],
+            ]);
+            self::clearValidationTags($target);
+            return;
+        }
+
+        AuditLog::record('validation_url_ok', 'info', [
+            'tickets_id' => $ticketId,
+            'message'    => 'Generating validation approve/reject tokens',
+            'payload'    => [
+                'validation_id'     => (int) $validation['id'],
+                'validator_user_id' => $validatorUserId,
+            ],
         ]);
 
-        if (count($iterator) === 0) {
-            self::clearValidationTags($target);
-            return;
-        }
-
-        $validation = $iterator->current();
-        $validationId = (int)$validation['id'];
-        $validatorId = (int)$validation['users_id_validate'];
-
-        // Use the actual validator as the authorized user
-        $userId = $validatorId > 0 ? $validatorId : $recipientUserId;
-
-        if ($userId <= 0) {
-            self::clearValidationTags($target);
-            return;
-        }
+        $validationId = (int) $validation['id'];
+        $userId       = $validatorUserId;
 
         // Generate approve token
         $approveToken = Token::generateToken(

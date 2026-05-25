@@ -2,9 +2,16 @@
 
 declare(strict_types=1);
 
-include('../../../inc/includes.php');
+if (!defined('GLPI_ROOT')) {
+    include('../../../inc/includes.php');
+}
 
 Session::checkRight('config', READ);
+
+// CSRF is enforced by the GLPI 11 HTTP middleware before this script
+// runs. Do NOT call Session::checkCSRF here — the middleware already
+// consumed the token and a second call would always fail.
+
 Html::header_nocache();
 header('Content-Type: application/json; charset=utf-8');
 

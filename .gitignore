@@ -42,3 +42,6 @@ build/
 *.backup
 *.bak
 *.tmp
+
+# Claude Code (local AI assistant config — not for distribution)
+.claude/

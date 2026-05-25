@@ -1,0 +1,679 @@
+# Russian translations for ApprovalByMail GLPI Plugin
+# Copyright (C) 2026 Community
+# This file is distributed under the same license as the mailaprove package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: mailaprove 1.0.4\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-25 00:00+0000\n"
+"PO-Revision-Date: 2026-05-25 00:00+0000\n"
+"Language: ru_RU\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+# ─── Plugin metadata ────────────────────────────────────────────────────────
+
+msgid "Approval By Mail"
+msgstr "Согласование по почте"
+
+msgid "Aprovação por e-mail"
+msgstr "Согласование по почте"
+
+msgid "Processado com segurança pelo GLPI"
+msgstr "Безопасно обработано в GLPI"
+
+msgid "Configuração da aprovação por e-mail"
+msgstr "Настройки согласования по почте"
+
+msgid "Approval Token"
+msgid_plural "Approval Tokens"
+msgstr[0] "Токен согласования"
+msgstr[1] "Токена согласования"
+msgstr[2] "Токенов согласования"
+
+msgid "Mail approval audit log"
+msgid_plural "Mail approval audit logs"
+msgstr[0] "Журнал аудита согласования"
+msgstr[1] "Журнала аудита согласования"
+msgstr[2] "Журналов аудита согласования"
+
+# ─── Config page ────────────────────────────────────────────────────────────
+
+msgid "Controle links de aprovação para validações, soluções e pesquisas de satisfação."
+msgstr "Управление ссылками одобрения для согласований, решений и опросов удовлетворённости."
+
+msgid "%d de 3 recursos ativos"
+msgstr "Активно %d из 3 функций"
+
+msgid "Configurações gerais"
+msgstr "Общие настройки"
+
+msgid "Expiração do token (horas)"
+msgstr "Срок действия токена (часов)"
+
+msgid "Os links enviados por e-mail expiram após este período."
+msgstr "Ссылки в письмах действительны указанное количество часов."
+
+msgid "Retenção de tokens usados (dias)"
+msgstr "Хранение использованных токенов (дней)"
+
+msgid "Mantém tokens processados por este período para investigação e rastreabilidade."
+msgstr "Использованные токены хранятся указанное число дней для аудита и расследований."
+
+msgid "Retenção da auditoria (dias)"
+msgstr "Хранение журнала аудита (дней)"
+
+msgid "Eventos mais antigos serão removidos pelo cron do plugin."
+msgstr "Более старые события удаляются по расписанию плагина."
+
+msgid "Recursos"
+msgstr "Функции"
+
+msgid "Aprovação de validação"
+msgstr "Согласование заявки"
+
+msgid "Permite aprovar ou recusar validações de chamados por e-mail"
+msgstr "Позволяет утверждать или отклонять согласования заявок через почту"
+
+msgid "Aceite de solução"
+msgstr "Принятие решения"
+
+msgid "Permite aceitar ou recusar soluções de chamados por e-mail"
+msgstr "Позволяет принимать или отклонять решения по заявкам через почту"
+
+msgid "Pesquisa de satisfação"
+msgstr "Опрос удовлетворённости"
+
+msgid "Permite responder pesquisas de satisfação por e-mail"
+msgstr "Позволяет отвечать на опросы удовлетворённости через почту"
+
+msgid "Salvar configuração"
+msgstr "Сохранить настройки"
+
+msgid "Configuração atualizada com sucesso."
+msgstr "Настройки успешно сохранены."
+
+# ─── Tags ───────────────────────────────────────────────────────────────────
+
+msgid "Tags dos modelos de notificação"
+msgstr "Теги для шаблонов уведомлений"
+
+msgid "Botões prontos para aprovar ou recusar uma validação"
+msgstr "Готовые кнопки для утверждения или отклонения согласования"
+
+msgid "URL para aprovar uma validação"
+msgstr "URL для утверждения согласования"
+
+msgid "URL para recusar uma validação"
+msgstr "URL для отклонения согласования"
+
+msgid "URL para aprovar validação"
+msgstr "URL для утверждения согласования"
+
+msgid "URL para recusar validação"
+msgstr "URL для отклонения согласования"
+
+msgid "Botões prontos para aceitar ou recusar uma solução"
+msgstr "Готовые кнопки для принятия или отклонения решения"
+
+msgid "URL para aceitar a solução do chamado"
+msgstr "URL для принятия решения по заявке"
+
+msgid "URL para recusar a solução do chamado"
+msgstr "URL для отклонения решения по заявке"
+
+msgid "URL para aceitar solução"
+msgstr "URL для принятия решения"
+
+msgid "URL para recusar solução"
+msgstr "URL для отклонения решения"
+
+msgid "Botão pronto para responder a pesquisa de satisfação"
+msgstr "Готовая кнопка для ответа на опрос удовлетворённости"
+
+msgid "URL da pesquisa de satisfação"
+msgstr "URL опроса удовлетворённости"
+
+msgid "Botões de aprovação da validação"
+msgstr "Кнопки утверждения согласования"
+
+msgid "Botões de aceite da solução"
+msgstr "Кнопки принятия решения"
+
+msgid "Botão da pesquisa de satisfação"
+msgstr "Кнопка опроса удовлетворённости"
+
+# ─── Email blocks ───────────────────────────────────────────────────────────
+
+msgid "Blocos de e-mail prontos"
+msgstr "Готовые блоки для писем"
+
+msgid "Bloco de e-mail para validação"
+msgstr "Блок письма для согласования"
+
+msgid "Use no modelo de notificação de validação do chamado."
+msgstr "Используйте в шаблоне уведомления о согласовании заявки."
+
+msgid "Bloco de e-mail para solução"
+msgstr "Блок письма для решения"
+
+msgid "Use no modelo de notificação de solução do chamado."
+msgstr "Используйте в шаблоне уведомления о решении заявки."
+
+msgid "Bloco de e-mail para satisfação"
+msgstr "Блок письма для опроса удовлетворённости"
+
+msgid "Use no modelo de notificação da pesquisa de satisfação."
+msgstr "Используйте в шаблоне уведомления об опросе удовлетворённости."
+
+msgid "Copiar HTML"
+msgstr "Скопировать HTML"
+
+msgid "Copiado"
+msgstr "Скопировано"
+
+# ─── Custom templates ───────────────────────────────────────────────────────
+
+msgid "Modelos customizados dos botões"
+msgstr "Кастомные шаблоны кнопок"
+
+msgid "Modelo customizado da validação"
+msgstr "Кастомный шаблон для согласования"
+
+msgid "Variáveis disponíveis: {{approve_url}}, {{reject_url}}, {{ticket_id}}, {{ticket_name}}."
+msgstr "Доступные переменные: {{approve_url}}, {{reject_url}}, {{ticket_id}}, {{ticket_name}}."
+
+msgid "Modelo customizado da solução"
+msgstr "Кастомный шаблон для решения"
+
+msgid "Variáveis disponíveis: {{accept_url}}, {{reject_url}}, {{ticket_id}}, {{ticket_name}}."
+msgstr "Доступные переменные: {{accept_url}}, {{reject_url}}, {{ticket_id}}, {{ticket_name}}."
+
+msgid "Modelo customizado da satisfação"
+msgstr "Кастомный шаблон для опроса"
+
+msgid "Variáveis disponíveis: {{survey_url}}, {{ticket_id}}, {{ticket_name}}."
+msgstr "Доступные переменные: {{survey_url}}, {{ticket_id}}, {{ticket_name}}."
+
+msgid "Deixe em branco para usar o modelo padrão do plugin."
+msgstr "Оставьте пустым чтобы использовать шаблон по умолчанию."
+
+msgid "Prévia"
+msgstr "Предпросмотр"
+
+msgid "Usar exemplo"
+msgstr "Подставить пример"
+
+msgid "Prévia do modelo"
+msgstr "Предпросмотр шаблона"
+
+msgid "Dados de chamado fictício são usados somente nesta prévia."
+msgstr "В предпросмотре используются вымышленные данные заявки."
+
+msgid "Fechar"
+msgstr "Закрыть"
+
+msgid "Prévia do modelo customizado"
+msgstr "Предпросмотр кастомного шаблона"
+
+msgid "Prévia de modelo vazio."
+msgstr "Предпросмотр пустого шаблона."
+
+msgid "Este modelo está vazio. O bloco padrão do plugin será usado."
+msgstr "Шаблон пуст. Будет использован стандартный блок плагина."
+
+msgid "Prévia gerada com dados de exemplo."
+msgstr "Предпросмотр сгенерирован с примерными данными."
+
+msgid "Tipo de modelo desconhecido."
+msgstr "Неизвестный тип шаблона."
+
+msgid "Solicitação de exemplo para acesso a notebook"
+msgstr "Пример заявки на доступ к ноутбуку"
+
+# ─── Email preview ──────────────────────────────────────────────────────────
+
+msgid "Prévia do e-mail"
+msgstr "Предпросмотр письма"
+
+msgid "Solicitação de validação"
+msgstr "Запрос на согласование"
+
+msgid "O e-mail gerado pode exibir ações de aprovação e recusa em botões claros."
+msgstr "В сгенерированном письме доступны явные кнопки утверждения и отклонения."
+
+msgid "Solução e satisfação"
+msgstr "Решение и удовлетворённость"
+
+msgid "Use os blocos de solução e pesquisa nas notificações que seus usuários já recebem."
+msgstr "Используйте блоки решения и опроса в уведомлениях, которые уже получают ваши пользователи."
+
+# ─── Audit log ──────────────────────────────────────────────────────────────
+
+msgid "Trilha de auditoria"
+msgstr "Журнал аудита"
+
+msgid "Ver tudo"
+msgstr "Открыть все"
+
+msgid "Nenhum evento ainda"
+msgstr "Событий пока нет"
+
+msgid "Os eventos aparecerão aqui quando links forem gerados ou utilizados."
+msgstr "События появятся здесь когда ссылки будут сгенерированы или использованы."
+
+msgid "Auditoria da aprovação por e-mail"
+msgstr "Аудит согласований по почте"
+
+msgid "Revise links gerados, cliques, tokens expirados e tentativas com falha."
+msgstr "Просматривайте сгенерированные ссылки, клики, истёкшие токены и неудачные попытки."
+
+msgid "Exportar CSV"
+msgstr "Экспорт в CSV"
+
+msgid "Voltar para configuração"
+msgstr "Назад к настройкам"
+
+msgid "Status"
+msgstr "Статус"
+
+msgid "Todos os status"
+msgstr "Все статусы"
+
+msgid "Sucesso"
+msgstr "Успешно"
+
+msgid "Alerta"
+msgstr "Предупреждение"
+
+msgid "Erro"
+msgstr "Ошибка"
+
+msgid "Informação"
+msgstr "Информация"
+
+msgid "Evento contém"
+msgstr "Событие содержит"
+
+msgid "Por página"
+msgstr "На странице"
+
+msgid "Aplicar"
+msgstr "Применить"
+
+msgid "Limpar"
+msgstr "Очистить"
+
+msgid "Evento"
+msgstr "Событие"
+
+msgid "Chamado"
+msgstr "Заявка"
+
+msgid "Usuário"
+msgstr "Пользователь"
+
+msgid "IP / Agente"
+msgstr "IP / Браузер"
+
+msgid "Data"
+msgstr "Дата"
+
+msgid "Nenhum evento de auditoria encontrado."
+msgstr "Не найдено ни одного события аудита."
+
+msgid "%1$d-%2$d de %3$d eventos"
+msgstr "%1$d-%2$d из %3$d событий"
+
+msgid "Anterior"
+msgstr "Назад"
+
+msgid "Próxima"
+msgstr "Вперёд"
+
+msgid "item"
+msgstr "элемент"
+
+msgid "token"
+msgstr "токен"
+
+msgid "payload"
+msgstr "payload"
+
+# ─── Validation actions ─────────────────────────────────────────────────────
+
+msgid "Confirmar aprovação"
+msgstr "Подтвердить утверждение"
+
+msgid "Revise o chamado antes de aprovar esta validação por e-mail."
+msgstr "Проверьте заявку перед утверждением согласования по почте."
+
+msgid "Revise a validação solicitada para este chamado."
+msgstr "Просмотрите запрошенное согласование заявки."
+
+msgid "Aprovar"
+msgstr "Утвердить"
+
+msgid "Recusar"
+msgstr "Отклонить"
+
+msgid "Aprovar validação"
+msgstr "Утвердить согласование"
+
+msgid "Após confirmar, a validação será aprovada no GLPI e os links relacionados serão invalidados."
+msgstr "После подтверждения согласование будет утверждено в GLPI, связанные ссылки станут недействительными."
+
+msgid "Aprovado por e-mail"
+msgstr "Утверждено по почте"
+
+msgid "Validação aprovada"
+msgstr "Согласование утверждено"
+
+msgid "A validação do chamado #%d foi aprovada com sucesso."
+msgstr "Согласование заявки #%d успешно утверждено."
+
+msgid "Não foi possível aprovar a validação. Acesse o GLPI para verificar o chamado."
+msgstr "Не удалось утвердить согласование. Откройте GLPI чтобы проверить заявку."
+
+msgid "Recusar validação"
+msgstr "Отклонить согласование"
+
+msgid "Informe o motivo da recusa."
+msgstr "Укажите причину отказа."
+
+msgid "Validação recusada"
+msgstr "Согласование отклонено"
+
+msgid "A validação do chamado #%d foi recusada."
+msgstr "Согласование заявки #%d отклонено."
+
+msgid "Não foi possível recusar a validação. Acesse o GLPI para verificar o chamado."
+msgstr "Не удалось отклонить согласование. Откройте GLPI чтобы проверить заявку."
+
+# ─── Solution actions ───────────────────────────────────────────────────────
+
+msgid "Confirmar aceite da solução"
+msgstr "Подтвердить принятие решения"
+
+msgid "Revise o chamado antes de aceitar esta solução por e-mail."
+msgstr "Проверьте заявку перед принятием решения по почте."
+
+msgid "Aceitar solução"
+msgstr "Принять решение"
+
+msgid "Após confirmar, a solução será marcada como aceita no GLPI e os links relacionados serão invalidados."
+msgstr "После подтверждения решение будет принято в GLPI, связанные ссылки станут недействительными."
+
+msgid "Uma solução foi registrada. Confirme se ela resolveu sua solicitação."
+msgstr "Зарегистрировано решение. Подтвердите, помогло ли оно вам."
+
+msgid "Solução aceita por e-mail"
+msgstr "Решение принято по почте"
+
+msgid "Solução aceita"
+msgstr "Решение принято"
+
+msgid "A solução do chamado #%d foi aceita com sucesso."
+msgstr "Решение по заявке #%d успешно принято."
+
+msgid "Não foi possível aceitar a solução. Acesse o GLPI para verificar o chamado."
+msgstr "Не удалось принять решение. Откройте GLPI чтобы проверить заявку."
+
+msgid "Recusar solução"
+msgstr "Отклонить решение"
+
+msgid "Informe o motivo da recusa da solução."
+msgstr "Укажите причину отказа от решения."
+
+msgid "Solução recusada por e-mail. Motivo: %s"
+msgstr "Решение отклонено по почте. Причина: %s"
+
+msgid "Solução recusada"
+msgstr "Решение отклонено"
+
+msgid "A solução do chamado #%d foi recusada."
+msgstr "Решение по заявке #%d отклонено."
+
+msgid "Não foi possível recusar a solução. Acesse o GLPI para verificar o chamado."
+msgstr "Не удалось отклонить решение. Откройте GLPI чтобы проверить заявку."
+
+# ─── Satisfaction survey ────────────────────────────────────────────────────
+
+msgid "Responder pesquisa"
+msgstr "Ответить на опрос"
+
+msgid "Como você avalia a resolução desta solicitação?"
+msgstr "Как вы оцениваете решение вашей заявки?"
+
+msgid "Sua resposta ajuda a melhorar a qualidade do atendimento."
+msgstr "Ваш ответ помогает улучшать качество поддержки."
+
+msgid "Sua opinião ajuda a melhorar a experiência de atendimento."
+msgstr "Ваше мнение помогает улучшать сервис поддержки."
+
+msgid "Sua nota"
+msgstr "Ваша оценка"
+
+msgid "Excelente"
+msgstr "Отлично"
+
+msgid "Muito bom"
+msgstr "Очень хорошо"
+
+msgid "Bom"
+msgstr "Хорошо"
+
+msgid "Regular"
+msgstr "Удовлетворительно"
+
+msgid "Ruim"
+msgstr "Плохо"
+
+msgid "Comentário adicional (opcional)"
+msgstr "Дополнительный комментарий (необязательно)"
+
+msgid "Compartilhe algum detalhe sobre o atendimento..."
+msgstr "Поделитесь подробностями об обслуживании..."
+
+msgid "Enviar pesquisa"
+msgstr "Отправить опрос"
+
+msgid "Selecione uma nota entre 1 e 5 estrelas."
+msgstr "Выберите оценку от 1 до 5 звёзд."
+
+msgid "Pesquisa enviada"
+msgstr "Опрос отправлен"
+
+msgid "Obrigado pelo feedback sobre o chamado #%d."
+msgstr "Спасибо за отзыв по заявке #%d."
+
+msgid "Não foi possível enviar a pesquisa. Acesse o GLPI para verificar o chamado."
+msgstr "Не удалось отправить опрос. Откройте GLPI чтобы проверить заявку."
+
+msgid "Pesquisa já respondida"
+msgstr "Опрос уже отвечен"
+
+msgid "Esta pesquisa de satisfação já foi respondida."
+msgstr "На этот опрос удовлетворённости уже отвечали."
+
+msgid "Pesquisa não encontrada"
+msgstr "Опрос не найден"
+
+msgid "A pesquisa de satisfação informada neste link não foi encontrada."
+msgstr "Опрос удовлетворённости из этой ссылки не найден."
+
+# ─── Errors and statuses ────────────────────────────────────────────────────
+
+msgid "Token ausente"
+msgstr "Токен отсутствует"
+
+msgid "Nenhum token de aprovação foi informado. Use o link original recebido por e-mail."
+msgstr "Токен согласования не указан. Используйте оригинальную ссылку из письма."
+
+msgid "Nenhum token foi informado. Use o link original recebido por e-mail."
+msgstr "Токен не указан. Используйте оригинальную ссылку из письма."
+
+msgid "Ação já processada"
+msgstr "Действие уже выполнено"
+
+msgid "Este link já foi utilizado ou outra ação relacionada já foi concluída."
+msgstr "Эта ссылка уже использована или связанное действие уже выполнено."
+
+msgid "Link expirado"
+msgstr "Срок ссылки истёк"
+
+msgid "Este link expirou. Acesse o GLPI para continuar o atendimento."
+msgstr "Срок ссылки истёк. Откройте GLPI чтобы продолжить обработку."
+
+msgid "Ação inválida"
+msgstr "Недействительное действие"
+
+msgid "Este link não corresponde à ação solicitada."
+msgstr "Эта ссылка не соответствует запрошенному действию."
+
+msgid "Link inválido"
+msgstr "Недействительная ссылка"
+
+msgid "Não foi possível validar este link. Use o link original recebido por e-mail."
+msgstr "Не удалось проверить ссылку. Используйте оригинальную ссылку из письма."
+
+msgid "Validação não encontrada"
+msgstr "Согласование не найдено"
+
+msgid "A solicitação de validação não foi encontrada. Ela pode ter sido removida no GLPI."
+msgstr "Запрос на согласование не найден. Возможно, он был удалён в GLPI."
+
+msgid "Link inconsistente"
+msgstr "Несогласованная ссылка"
+
+msgid "Este link não corresponde mais à validação do chamado informado."
+msgstr "Эта ссылка больше не соответствует согласованию указанной заявки."
+
+msgid "Este link não corresponde mais à solução do chamado informado."
+msgstr "Эта ссылка больше не соответствует решению указанной заявки."
+
+msgid "Este link não corresponde mais à pesquisa do chamado informado."
+msgstr "Эта ссылка больше не соответствует опросу указанной заявки."
+
+msgid "Ação não autorizada"
+msgstr "Действие не разрешено"
+
+msgid "Este link pertence a outro aprovador."
+msgstr "Эта ссылка принадлежит другому согласующему."
+
+msgid "Somente o solicitante do chamado pode aceitar ou recusar a solução por e-mail."
+msgstr "Только заявитель может принимать или отклонять решение по почте."
+
+msgid "Somente o solicitante do chamado pode responder esta pesquisa por e-mail."
+msgstr "Только заявитель может отвечать на этот опрос по почте."
+
+msgid "Validação já processada"
+msgstr "Согласование уже обработано"
+
+msgid "Esta validação já foi aprovada ou recusada no GLPI."
+msgstr "Это согласование уже утверждено или отклонено в GLPI."
+
+msgid "Solução já processada"
+msgstr "Решение уже обработано"
+
+msgid "Esta solução já foi aceita ou recusada no GLPI."
+msgstr "Это решение уже принято или отклонено в GLPI."
+
+msgid "Solução não encontrada"
+msgstr "Решение не найдено"
+
+msgid "A solução informada neste link não foi encontrada."
+msgstr "Решение из этой ссылки не найдено."
+
+msgid "Erro ao processar"
+msgstr "Ошибка обработки"
+
+msgid "Não foi possível processar"
+msgstr "Не удалось обработать"
+
+msgid "A ação não pôde ser concluída."
+msgstr "Действие не удалось завершить."
+
+msgid "Não foi possível concluir a ação."
+msgstr "Не удалось завершить действие."
+
+msgid "Se o problema persistir, acesse o GLPI diretamente."
+msgstr "Если проблема не уходит — откройте GLPI напрямую."
+
+# ─── Confirmation page ──────────────────────────────────────────────────────
+
+msgid "Confirmar ação"
+msgstr "Подтвердить действие"
+
+msgid "Confirmar"
+msgstr "Подтвердить"
+
+msgid "Confirmação"
+msgstr "Подтверждение"
+
+msgid "Ação concluída"
+msgstr "Действие выполнено"
+
+msgid "Sua ação foi processada com sucesso."
+msgstr "Ваше действие успешно обработано."
+
+msgid "Você já pode fechar esta janela."
+msgstr "Окно можно закрыть."
+
+msgid "Revise os dados antes de continuar."
+msgstr "Проверьте данные перед продолжением."
+
+msgid "Esta ação será registrada no GLPI e o link não poderá ser usado novamente."
+msgstr "Действие будет записано в GLPI, ссылку повторно использовать нельзя."
+
+msgid "Confirmar recusa"
+msgstr "Подтвердить отказ"
+
+msgid "Motivo da recusa"
+msgstr "Причина отказа"
+
+msgid "Descreva de forma objetiva o motivo da recusa..."
+msgstr "Опишите кратко причину отказа..."
+
+msgid "Informe um motivo claro. Ele será registrado no histórico do chamado."
+msgstr "Укажите ясную причину. Она будет записана в истории заявки."
+
+# ─── Ticket summary fields ──────────────────────────────────────────────────
+
+msgid "Chamado #%d"
+msgstr "Заявка #%d"
+
+msgid "Chamado #%s: %s"
+msgstr "Заявка #%s: %s"
+
+msgid "A solução do chamado #%s foi registrada."
+msgstr "Зарегистрировано решение по заявке #%s."
+
+msgid "Sua opinião sobre o chamado #%s é importante."
+msgstr "Ваше мнение о заявке #%s важно для нас."
+
+msgid "Chamado não encontrado"
+msgstr "Заявка не найдена"
+
+msgid "Sem título informado"
+msgstr "Без заголовка"
+
+msgid "aberto em %s"
+msgstr "открыта %s"
+
+msgid "solicitante: %s"
+msgstr "заявитель: %s"
+
+msgid "usuário"
+msgstr "пользователь"
+
+# ─── CSRF / cron ────────────────────────────────────────────────────────────
+
+msgid "Token CSRF inválido."
+msgstr "Недействительный CSRF-токен."
+
+msgid "Clean expired approval tokens"
+msgstr "Очистка просроченных токенов согласования"

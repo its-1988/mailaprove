@@ -1,6 +1,8 @@
 <?php
 
-include('../../../inc/includes.php');
+if (!defined('GLPI_ROOT')) {
+    include('../../../inc/includes.php');
+}
 
 use GlpiPlugin\Mailaprove\Token;
 use GlpiPlugin\Mailaprove\PublicAction;
@@ -12,7 +14,7 @@ if (empty($rawToken)) {
     $error = 'missing_token';
     $errorTitle = __('Token ausente', 'mailaprove');
     $errorMessage = __('Nenhum token de aprovação foi informado. Use o link original recebido por e-mail.', 'mailaprove');
-    include(GLPI_ROOT . '/plugins/mailaprove/templates/error.php');
+    include(__DIR__ . '/../templates/error.php');
     exit;
 }
 
@@ -44,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $formError = __('Informe o motivo da recusa.', 'mailaprove');
         $ticketId = (int)$tokenData['tickets_id'];
         $ticketSummary = $context['ticket'];
-        include(GLPI_ROOT . '/plugins/mailaprove/templates/reject_form.php');
+        include(__DIR__ . '/../templates/reject_form.php');
         exit;
     }
 
@@ -61,13 +63,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $validation = $context['item'];
-    $updateResult = $validation->update([
-        'id'                 => (int)$tokenData['items_id'],
-        'status'             => CommonITILValidation::REFUSED,
-        'comment_validation' => $comment,
-        'validation_date'    => date('Y-m-d H:i:s'),
-    ]);
+    // Bypass session-based permission checks (token is the auth) and
+    // write the rejection directly through $DB.
+    $updateResult = PublicAction::applyValidationDecision(
+        (int) $tokenData['items_id'],
+        CommonITILValidation::REFUSED,
+        (int) $tokenData['users_id'],
+        $comment
+    );
 
     if ($updateResult) {
         Token::markRelatedAsUsed([
@@ -82,12 +85,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             (int)$tokenData['tickets_id']
         );
         $confirmType = 'warning';
-        include(GLPI_ROOT . '/plugins/mailaprove/templates/confirm.php');
+        include(__DIR__ . '/../templates/confirm.php');
     } else {
         AuditLog::record('validation_reject_failed', 'error', AuditLog::contextFromTokenRow($tokenData));
         $errorTitle = __('Erro ao processar', 'mailaprove');
         $errorMessage = __('Não foi possível recusar a validação. Acesse o GLPI para verificar o chamado.', 'mailaprove');
-        include(GLPI_ROOT . '/plugins/mailaprove/templates/error.php');
+        include(__DIR__ . '/../templates/error.php');
     }
     exit;
 }
@@ -96,4 +99,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $ticketId = (int)$tokenData['tickets_id'];
 $formError = '';
 $ticketSummary = $context['ticket'];
-include(GLPI_ROOT . '/plugins/mailaprove/templates/reject_form.php');
+include(__DIR__ . '/../templates/reject_form.php');

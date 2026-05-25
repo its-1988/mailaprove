@@ -1,6 +1,6 @@
 <?php
 
-define('PLUGIN_MAILAPROVE_VERSION', '1.0.3');
+define('PLUGIN_MAILAPROVE_VERSION', '1.0.4');
 define('PLUGIN_MAILAPROVE_MIN_GLPI', '11.0.0');
 define('PLUGIN_MAILAPROVE_MAX_GLPI', '11.99.99');
 
@@ -10,7 +10,7 @@ use GlpiPlugin\Mailaprove\NotificationHandler;
 function plugin_version_mailaprove(): array
 {
     return [
-        'name'           => 'Approval By Mail',
+        'name'           => __('Approval By Mail', 'mailaprove'),
         'version'        => PLUGIN_MAILAPROVE_VERSION,
         'author'         => 'Community',
         'license'        => 'GPLv3+',
@@ -30,8 +30,11 @@ function plugin_init_mailaprove(): void
 {
     global $PLUGIN_HOOKS;
 
-    // CSRF compliance (required in GLPI 11)
-    $PLUGIN_HOOKS[Hooks::CSRF_COMPLIANT]['mailaprove'] = true;
+    // CSRF compliance: the `Hooks::CSRF_COMPLIANT` flag was deprecated in
+    // GLPI 11.0.0 — the HTTP middleware now validates and consumes
+    // `_glpi_csrf_token` automatically on POST requests. We just keep the
+    // hidden token input inside our forms; do NOT call Session::checkCSRF
+    // manually or the second call will fail.
 
     // Register notification data hook - injects custom tags
     $PLUGIN_HOOKS[Hooks::ITEM_GET_DATA]['mailaprove'] = [
@@ -47,6 +50,35 @@ function plugin_init_mailaprove(): void
         \Glpi\Http\SessionManager::registerPluginStatelessPath(
             'mailaprove',
             '#^/front/(approve|reject|solution_approve|solution_reject|satisfaction)\.php$#'
+        );
+    }
+
+    // Explicit firewall strategies for legacy plugin scripts (GLPI 11+).
+    // Without these the request router can fall through to the inventory
+    // agent handler, producing an XML parsing error when an HTML form is
+    // submitted.
+    if (
+        class_exists(\Glpi\Http\Firewall::class)
+        && method_exists(\Glpi\Http\Firewall::class, 'addPluginStrategyForLegacyScripts')
+    ) {
+        // Public mail action endpoints — explicitly anonymous.
+        \Glpi\Http\Firewall::addPluginStrategyForLegacyScripts(
+            'mailaprove',
+            '#^/front/(approve|reject|solution_approve|solution_reject|satisfaction)\.php$#',
+            \Glpi\Http\Firewall::STRATEGY_NO_CHECK
+        );
+
+        // Admin endpoints — authenticated central interface only.
+        \Glpi\Http\Firewall::addPluginStrategyForLegacyScripts(
+            'mailaprove',
+            '#^/front/(config\.form|audit)\.php$#',
+            \Glpi\Http\Firewall::STRATEGY_CENTRAL_ACCESS
+        );
+
+        \Glpi\Http\Firewall::addPluginStrategyForLegacyScripts(
+            'mailaprove',
+            '#^/ajax/template\.preview\.php$#',
+            \Glpi\Http\Firewall::STRATEGY_CENTRAL_ACCESS
         );
     }
 
