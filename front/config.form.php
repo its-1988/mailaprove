@@ -1200,12 +1200,17 @@ function previewTemplate(button) {
         formData.append('_glpi_csrf_token', csrf.value);
     }
 
+    const headers = {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+    };
+    if (csrf && csrf.value) {
+        headers['X-Glpi-Csrf-Token'] = csrf.value;
+    }
+
     fetch(preview.getAttribute('data-preview-url'), {
         method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
+        headers: headers,
         body: formData,
         credentials: 'same-origin'
     }).then(function (response) {
