@@ -60,7 +60,6 @@ class Token extends CommonDBTM
             return false;
         }
 
-        self::invalidatePreviousTokens($actionType, $ticketId, $itemId, $userId, (int) $result);
 
         AuditLog::record('token_created', 'success', [
             'token_id'    => (int) $result,
